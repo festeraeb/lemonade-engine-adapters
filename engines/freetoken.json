@@ -1,0 +1,29 @@
+{
+  "recipe": "freetoken",
+  "stem": "freetoken",
+  "class_prefix": "FreeToken",
+  "display_name": "FreeToken (edge-native MoE engine)",
+  "binary": "ft",
+  "args_template": "serve --model {model} --host 127.0.0.1 --port {port} --dtype float16 --moe-strategy offload --moe-cache-auto --memory-ratio 0.85 --gpu 0",
+  "env": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "CUDA_VISIBLE_DEVICES": "{device}"
+  },
+  "default_device": "gpu",
+  "support": [
+    {"os": ["linux"], "devices": {"nvidia_gpu": ["sm_75", "sm_80", "sm_86", "sm_89", "sm_90", "sm_100", "sm_120"]},
+     "note": "NVIDIA GPU, Turing or newer (CUDA 13, driver r580+); on Turing uninstall sglang-kernel"}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 1800, "json_field": "status", "ready_values": ["ok"], "error_values": ["error"]},
+  "identity": {"owned_by": "FreeToken"},
+  "completion": true,
+  "telemetry_path": "/v1/stats",
+  "notes": [
+    "FreeToken 0.2.1 (github.com/FlashML-org/FreeToken, Apache-2.0). `ft` must be on lemond's PATH.",
+    "Measured 2026-10-28, RTX 2060 (c4): Qwen3.6-35B-A3B Q5_K_M 43-50 tok/s decode; Gemma-4 26B-A4B",
+    "IQ4_XS 53-66 tok/s with the decode-tile fix plus PR #24's extend-tile change (Turing).",
+    "No NautiBurn scrape hook in FreeToken yet: the scraper rule is open for this engine."
+  ]
+}

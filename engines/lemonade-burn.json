@@ -1,0 +1,21 @@
+{
+  "recipe": "lemonade-burn",
+  "stem": "burn",
+  "class_prefix": "Burn",
+  "display_name": "lemonade-burn (Burn + ternary CPU kernels)",
+  "binary": "lemonade-burn-server",
+  "args_template": "--model {model} --host 127.0.0.1 --port {port}",
+  "default_device": "cpu",
+  "support": [
+    {"os": ["linux"], "devices": {"cpu": ["x86_64"]}, "note": "x86_64 CPU (AVX2 / AVX-512 ternary kernels)"}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "dir", "marker": "model.lbt.safetensors"},
+  "ready": {"path": "/health", "timeout_s": 600},
+  "identity": {"owned_by": "lemonade-burn"},
+  "completion": true,
+  "notes": [
+    "lemonade-burn (github.com/festeraeb/lemonade-burn): BitNet b1.58 ternary on CPU, models converted by lb-convert.",
+    "Replaces the bridge-based burn backend written for Lemonade 11.9, which did not build on 2026.43.x."
+  ]
+}
