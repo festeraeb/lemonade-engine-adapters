@@ -8,10 +8,17 @@ architecture plan (section 2.6b c).
 
 | File | What |
 |---|---|
-| `make_adapter.py` | the generator: `--check`, `--out <dir>`, or `--lemonade-src <fork>` (also adds the `LEMON_BACKENDS` line) |
+| `src/`, `Cargo.toml` | **the tool**: Rust binary `make-adapter` (`cargo build --release`), same flags: `--check`, `--out <dir>`, or `--lemonade-src <fork>` (also adds the `LEMON_BACKENDS` line) |
+| `make_adapter.py` | the original Python generator, kept until the operator retires it |
 | `engines/*.json` | engine specs: `freetoken`, `lemonade-burn` |
 | `ADAPTER_PROMPT.md` | instructions for an agent to wrap a new engine, with the five gates |
-| `tests/test_make_adapter.py` | `python3 -I tests/test_make_adapter.py` |
+| `tests/make_adapter.rs` | `cargo test` (port of the 7 Python tests) |
+| `tests/test_make_adapter.py` | `python3 -I tests/test_make_adapter.py` (old) |
+
+`make_adapter.py` is superseded by the Rust binary `make-adapter`. Parity check (2026-10-29): for
+`engines/freetoken.json` and `engines/lemonade-burn.json`, `diff -r` of the `--out` trees from both tools
+is empty (byte-identical), `--check` output and the validation error text match on broken specs, and
+`--lemonade-src` on a copy of the fork's CMakeLists.txt gives identical results.
 
 What a generated backend does on `load`: finds the engine binary in PATH (missing = error, never
 faked), starts it from `args_template` with `env` (placeholders `{model}` `{port}` `{device}`),

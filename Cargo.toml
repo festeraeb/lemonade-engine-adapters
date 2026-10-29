@@ -1,0 +1,20 @@
+[package]
+name = "make-adapter"
+version = "0.1.0"
+edition = "2021"
+description = "Turn one engine spec (JSON) into a native Lemonade backend (Rust port of make_adapter.py)"
+
+[lib]
+name = "make_adapter"
+path = "src/lib.rs"
+
+[[bin]]
+name = "make-adapter"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[profile.release]
+opt-level = 3
+lto = true
