@@ -1,7 +1,7 @@
 # lemonade-engine-adapters
 
-One JSON spec per engine, turned into a native backend for our Lemonade fork (Iced Lemon Cake,
-Lemonade 2026.43.x backend API; the fork is not public yet, so the generated backends build only there for now). The engine
+One JSON spec per engine, turned into a native backend for our Lemonade fork ([Iced Lemon Cake](https://github.com/festeraeb/lemonade-iced-lemcake),
+Lemonade 2026.43.x backend API). The engine
 then lists in `lemonade backends`, registers with `/api/v1/pull`, loads, unloads and routes like
 any built-in model. Part of NautiK9 Lemonade Stand.
 
