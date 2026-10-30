@@ -1,0 +1,48 @@
+{
+  "recipe": "rea",
+  "stem": "rea",
+  "class_prefix": "Rea",
+  "display_name": "REA (Reverse Engineer Anything v6.8.0 + Open-Weight Agent)",
+  "binary": "rea-lemonade-server",
+  "args_template": "--model {model} --host 127.0.0.1 --port {port} --device {device}",
+  "default_device": "cpu",
+  "support": [
+    {
+      "os": [
+        "linux"
+      ],
+      "devices": {
+        "cpu": [
+          "x86_64"
+        ]
+      },
+      "note": "Linux x86_64"
+    }
+  ],
+  "modes": [
+    "chat"
+  ],
+  "checkpoint": {
+    "kind": "file"
+  },
+  "ready": {
+    "path": "/health",
+    "timeout_s": 120,
+    "json_field": "status",
+    "ready_values": [
+      "ok"
+    ],
+    "error_values": [
+      "error"
+    ]
+  },
+  "identity": {
+    "owned_by": "rea"
+  },
+  "completion": true,
+  "telemetry_path": "/v1/stats",
+  "notes": [
+    "Draft for Bitter Lemons (rea agent as a Lemonade backend). Not built or verified yet.",
+    "Checkpoint is a binary or firmware file to inspect."
+  ]
+}

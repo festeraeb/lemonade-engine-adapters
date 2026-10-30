@@ -1,16 +1,16 @@
 # lemonade-engine-adapters
 
-One JSON spec per engine, turned into a native backend for our Lemonade fork
-(`/codebase/repos/lemonade-fork`, `iced-lemcake/*`, Lemonade 2026.43.x backend API). The engine
+One JSON spec per engine, turned into a native backend for our Lemonade fork (Iced Lemon Cake,
+Lemonade 2026.43.x backend API; the fork is not public yet, so the generated backends build only there for now). The engine
 then lists in `lemonade backends`, registers with `/api/v1/pull`, loads, unloads and routes like
-any built-in model. This is the "written generator" form of the adapter maker in the Lemonade
-architecture plan (section 2.6b c).
+any built-in model. Part of NautiK9 Lemonade Stand.
 
 | File | What |
 |---|---|
 | `src/`, `Cargo.toml` | **the tool**: Rust binary `make-adapter` (`cargo build --release`), same flags: `--check`, `--out <dir>`, or `--lemonade-src <fork>` (also adds the `LEMON_BACKENDS` line) |
 | `make_adapter.py` | the original Python generator, kept until the operator retires it |
 | `engines/*.json` | engine specs: `freetoken`, `lemonade-burn` |
+| `engines/drafts/*.json` | unverified drafts for Bitter Lemons (`rea`, `movidius`); not built or tested |
 | `ADAPTER_PROMPT.md` | instructions for an agent to wrap a new engine, with the five gates |
 | `tests/make_adapter.rs` | `cargo test` (port of the 7 Python tests) |
 | `tests/test_make_adapter.py` | `python3 -I tests/test_make_adapter.py` (old) |
@@ -33,3 +33,7 @@ ports, runtime fingerprint).
 FreeToken 0.2.1 through the fork's lemond on :13606: pull, load pinned to PCI index 4 (185 s),
 chat 44-47 tok/s decode via `/api/v1/chat/completions`, unload frees the card and the port; a
 missing checkpoint is refused at pull.
+
+## Licence
+
+Apache License 2.0, see `LICENSE`.

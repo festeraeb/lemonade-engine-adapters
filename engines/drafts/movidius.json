@@ -1,0 +1,48 @@
+{
+  "recipe": "movidius",
+  "stem": "movidius",
+  "class_prefix": "Movidius",
+  "display_name": "Intel Movidius Myriad 2 VPU (pure-Rust 12-SHAVE NCSDK v1)",
+  "binary": "movidius-rust",
+  "args_template": "serve --model {model} --host 127.0.0.1 --port {port} --device {device}",
+  "default_device": "cpu",
+  "support": [
+    {
+      "os": [
+        "linux"
+      ],
+      "devices": {
+        "cpu": [
+          "x86_64"
+        ]
+      },
+      "note": "Linux x86_64 host with a Movidius NCS1 (03e7:2150 / 03e7:f63b) on USB"
+    }
+  ],
+  "modes": [
+    "chat"
+  ],
+  "checkpoint": {
+    "kind": "file"
+  },
+  "ready": {
+    "path": "/health",
+    "timeout_s": 120,
+    "json_field": "status",
+    "ready_values": [
+      "ok"
+    ],
+    "error_values": [
+      "error"
+    ]
+  },
+  "identity": {
+    "owned_by": "movidius-rust"
+  },
+  "completion": true,
+  "telemetry_path": "/v1/stats",
+  "notes": [
+    "Draft for Bitter Lemons (Movidius NCS1 USB stick as a Lemonade backend). Not built or verified yet.",
+    "The bare-metal Rust NCS1 runtime runs real NCSDK v1 graphs; the GEMM graph builder is not working yet, and there is no chat model for this stick."
+  ]
+}

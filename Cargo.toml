@@ -2,6 +2,8 @@
 name = "make-adapter"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/festeraeb/lemonade-engine-adapters"
 description = "Turn one engine spec (JSON) into a native Lemonade backend (Rust port of make_adapter.py)"
 
 [lib]
