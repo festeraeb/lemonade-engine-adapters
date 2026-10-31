@@ -9,7 +9,7 @@ any built-in model. Part of NautiK9 Lemonade Stand.
 |---|---|
 | `src/`, `Cargo.toml` | **the tool**: Rust binary `make-adapter` (`cargo build --release`), same flags: `--check`, `--out <dir>`, or `--lemonade-src <fork>` (also adds the `LEMON_BACKENDS` line) |
 | `make_adapter.py` | the original Python generator, kept until the operator retires it |
-| `engines/*.json` | engine specs: `freetoken`, `lemonade-burn` |
+| `engines/*.json` | engine specs: `freetoken`, `lemonade-burn`, `polystrata` (spec checked, not yet loaded; see `POLYSTRATA.md`) |
 | `engines/drafts/*.json` | unverified drafts for Bitter Lemons (`rea`, `movidius`); not built or tested |
 | `ADAPTER_PROMPT.md` | instructions for an agent to wrap a new engine, with the five gates |
 | `tests/make_adapter.rs` | `cargo test` (port of the 7 Python tests) |
