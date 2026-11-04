@@ -5,6 +5,10 @@ Lemonade 2026.43.x backend API). The engine
 then lists in `lemonade backends`, registers with `/api/v1/pull`, loads, unloads and routes like
 any built-in model. Part of NautiK9 Lemonade Stand.
 
+> **Two ways in.** This repo builds engines *into* a Lemonade fork as native backends. To add engines to a
+> **stock** Lemonade with no fork, use the one-click installer, [NautiK9 Lemonade Stand](https://github.com/festeraeb/lemonade-engines):
+> it starts an OpenAI-compatible engine on localhost and registers it as a provider with `lemonade cloud install`.
+
 | File | What |
 |---|---|
 | `src/`, `Cargo.toml` | **the tool**: Rust binary `make-adapter` (`cargo build --release`), same flags: `--check`, `--out <dir>`, or `--lemonade-src <fork>` (also adds the `LEMON_BACKENDS` line) |
