@@ -1,0 +1,29 @@
+{
+  "recipe": "polystrata",
+  "stem": "polystrata",
+  "class_prefix": "PolyStrata",
+  "display_name": "PolyStrata (CUDA MoE engine, strata-poly)",
+  "binary": "polystrata-serve",
+  "args_template": "--engine strata --config {model} --host 127.0.0.1 --port {port} --gpu {device}",
+  "env": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
+  },
+  "default_device": "gpu",
+  "support": [
+    {"os": ["linux"], "devices": {"nvidia_gpu": ["sm_60", "sm_75", "sm_80", "sm_86", "sm_89", "sm_90", "sm_100", "sm_120"]},
+     "note": "NVIDIA only (CUDA, g++ and the CUDA toolkit to build). README: RTX 20 or newer; sm_60 (Tesla P100) is covered by the Pascal-compat fork. Not yet: AMD cards."}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 1800, "json_field": "status", "ready_values": ["ok"]},
+  "identity": {"owned_by": "polystrata"},
+  "completion": true,
+  "notes": [
+    "PolyStrata (github.com/festeraeb/PolyStrata, fork of VecSzn/PolyStrata). `polystrata-serve` is a one-line wrapper on lemond's PATH: exec python3 <PolyStrata>/serve/server.py \"$@\" (see docs/POLYSTRATA.md).",
+    "{model} is the run config JSON that PolyStrata's setup writes (strata-<name>.json: exe, args, tokenizer, model_name, GGUF path), not the GGUF itself. {device} is the nvidia-smi index (PCI bus order).",
+    "GAP (checked 2026-10-31, d52354d6): PolyStrata's /v1/models objects have no `owned_by` field, so the generated backend's identity check cannot pass until PolyStrata adds \"owned_by\": \"polystrata\" to them. Lemonade also already lists a running PolyStrata as a cloud provider (docs/LEMONADE.md) without this adapter.",
+    "/health answers only once the engine is up ({\"status\":\"ok\",\"loaded\":true,\"service\":\"strata\"}), after the first start's compile and expert-cache fill.",
+    "LFM2.5-24B-A2B (LiquidAI LFM Open License v1.0, not open source) runs in it as the `lfm25` family; GPU: 8 GB or more.",
+    "Not tested through this adapter. The CUDA cards were not on a node when it was written. No NautiBurn scrape hook: the scraper rule is open for this engine."
+  ]
+}
