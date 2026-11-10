@@ -4,7 +4,8 @@
   "class_prefix": "Rea",
   "display_name": "REA (Reverse Engineer Anything v6.8.0 + Open-Weight Agent)",
   "binary": "rea-lemonade-server",
-  "args_template": "--model {model} --host 127.0.0.1 --port {port} --device {device}",
+  "spec_version": 1,
+  "args": ["--model", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--device", "{device}"],
   "default_device": "cpu",
   "support": [
     {

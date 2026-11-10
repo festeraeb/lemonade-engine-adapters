@@ -37,7 +37,7 @@ missing; do not edit generated files.
 ## Write the spec
 
 Copy `engines/freetoken.json`, then fill every field from the answers above. Rules the tool
-enforces: `args_template` has `{model}` and `{port}`, is split on spaces (no quotes, `$`, pipes);
+enforces: `args` is an array of strings (one per argv entry, no whitespace inside, no quotes, `$`, pipes) with `{model}` and `{port}`, and the spec has `"spec_version": 1` (the legacy `args_template` string still works, see `SPEC_FORMAT.md`);
 `binary` is a bare name; placeholders are only `{model}`, `{port}`, `{device}`.
 
 Check: `python3 make_adapter.py engines/<engine>.json --check` prints three file paths. A spec

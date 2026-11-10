@@ -4,7 +4,8 @@
   "class_prefix": "PolyStrata",
   "display_name": "PolyStrata (CUDA MoE engine, strata-poly)",
   "binary": "polystrata-serve",
-  "args_template": "--engine strata --config {model} --host 127.0.0.1 --port {port} --gpu {device}",
+  "spec_version": 1,
+  "args": ["--engine", "strata", "--config", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--gpu", "{device}"],
   "env": {
     "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
   },

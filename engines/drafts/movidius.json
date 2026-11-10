@@ -4,7 +4,8 @@
   "class_prefix": "Movidius",
   "display_name": "Intel Movidius Myriad 2 VPU (pure-Rust 12-SHAVE NCSDK v1)",
   "binary": "movidius-rust",
-  "args_template": "serve --model {model} --host 127.0.0.1 --port {port} --device {device}",
+  "spec_version": 1,
+  "args": ["serve", "--model", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--device", "{device}"],
   "default_device": "cpu",
   "support": [
     {

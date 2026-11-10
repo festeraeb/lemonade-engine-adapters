@@ -4,7 +4,8 @@
   "class_prefix": "FreeToken",
   "display_name": "FreeToken (edge-native MoE engine)",
   "binary": "ft",
-  "args_template": "serve --model {model} --host 127.0.0.1 --port {port} --dtype float16 --moe-strategy offload --moe-cache-auto --memory-ratio 0.85 --gpu 0",
+  "spec_version": 1,
+  "args": ["serve", "--model", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--dtype", "float16", "--moe-strategy", "offload", "--moe-cache-auto", "--memory-ratio", "0.85", "--gpu", "0"],
   "env": {
     "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
     "CUDA_VISIBLE_DEVICES": "{device}"

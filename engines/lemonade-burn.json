@@ -4,7 +4,8 @@
   "class_prefix": "Burn",
   "display_name": "lemonade-burn (Burn + ternary CPU kernels)",
   "binary": "lemonade-burn-server",
-  "args_template": "--model {model} --host 127.0.0.1 --port {port}",
+  "spec_version": 1,
+  "args": ["--model", "{model}", "--host", "127.0.0.1", "--port", "{port}"],
   "default_device": "cpu",
   "support": [
     {"os": ["linux"], "devices": {"cpu": ["x86_64"]}, "note": "x86_64 CPU (AVX2 / AVX-512 ternary kernels)"}

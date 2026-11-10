@@ -4,7 +4,8 @@
   "class_prefix": "BurnLfm2",
   "display_name": "lemonade-burn LFM2 (our MoE engine: Burn + CubeCL, GGUF Q4_0)",
   "binary": "lemonade-burn-server",
-  "args_template": "--model {model} --host 127.0.0.1 --port {port} --placement-from-scrapes /var/lib/nautiburn/scrape-lfm2 --gpu-budget-mb 4000 --gpu",
+  "spec_version": 1,
+  "args": ["--model", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--placement-from-scrapes", "/var/lib/nautiburn/scrape-lfm2", "--gpu-budget-mb", "4000", "--gpu"],
   "env": {
     "LB_WGPU_DEVICE": "{device}",
     "NAUTIBURN_SCRAPE_DIR": "/var/lib/nautiburn/scrape-lfm2"
@@ -21,7 +22,7 @@
   "completion": true,
   "notes": [
     "lemonade-burn (github.com/festeraeb/lemonade-burn, branch lfm2-cubecl): LFM2 / LFM2-MoE loaded straight from a GGUF (Q4_0 matrices, Q6_K tied head); {model} is the .gguf path and tokenizer.json must sit beside it (LiquidAI's tokenizer.json from the model repo).",
-    "The server is built with `cargo build --release -p lb-server --features gpu`; without the feature it still serves, all on CPU (drop --gpu from args_template).",
+    "The server is built with `cargo build --release -p lb-server --features gpu`; without the feature it still serves, all on CPU (drop --gpu from args).",
     "NautiBurn scrape hook built in: every request writes a schema_version-1 scrape file to NAUTIBURN_SCRAPE_DIR, and the same directory feeds the expert placement at the next load (the scraper rule is met by the engine itself).",
     "Step-2 state (2026-10-31): CPU path is a correctness reference (slow); GPU path runs only the resident experts. Prefetch from nautiburn-shadow, GPU attention/prefill and the native tokenizer are step 3 (docs/LFM2_CUBECL.md in the engine repo).",
     "Not yet loaded through a generated backend; verified by a direct round trip to the server (see the engine repo's docs/LFM2_CUBECL.md)."

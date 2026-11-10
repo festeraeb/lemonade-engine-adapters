@@ -25,7 +25,7 @@ is empty (byte-identical), `--check` output and the validation error text match 
 `--lemonade-src` on a copy of the fork's CMakeLists.txt gives identical results.
 
 What a generated backend does on `load`: finds the engine binary in PATH (missing = error, never
-faked), starts it from `args_template` with `env` (placeholders `{model}` `{port}` `{device}`),
+faked), starts it from `args` (array; see `SPEC_FORMAT.md`) with `env` (placeholders `{model}` `{port}` `{device}`),
 waits for the ready route and, if the spec says so, a JSON readiness value, then checks
 `owned_by` in `/v1/models` and stops the engine if it does not match. `unload` stops it.
 
