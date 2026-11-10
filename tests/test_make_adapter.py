@@ -33,9 +33,9 @@ class Validation(unittest.TestCase):
     def test_rejects(self):
         cases = {
             "missing field": bad(identity=None),
-            "no {model}": bad(args_template="serve --port {port}"),
-            "shell syntax": bad(args_template="serve --model {model} --port {port} | tee log"),
-            "unknown placeholder": bad(args_template="serve --model {model} --port {port} --ctx {ctx}"),
+            "no {model}": bad(args=["serve", "--port", "{port}"]),
+            "shell syntax": bad(args=["serve", "--model", "{model}", "--port", "{port}", "|", "tee", "log"]),
+            "unknown placeholder": bad(args=["serve", "--model", "{model}", "--port", "{port}", "--ctx", "{ctx}"]),
             "binary with path": bad(binary="/usr/bin/ft"),
             "bad recipe": bad(recipe="Free_Token"),
             "bad device family": bad(support=[{"os": ["linux"], "devices": {"cuda": []}}]),

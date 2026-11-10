@@ -20,7 +20,9 @@ Spec (see engines/freetoken.json and ADAPTER_PROMPT.md):
     class_prefix    C++ class prefix, CamelCase (FreeToken -> FreeTokenServer)
     display_name    shown in `lemonade backends`
     binary          engine executable, looked up in PATH at load time
-    args_template   engine arguments; placeholders {model} {port} {device}; split on spaces, no shell
+    args            engine arguments, an array of strings (the plane's preferred form, spec_version 1);
+                    placeholders {model} {port} {device}; no shell. Legacy: args_template, one string
+                    split on spaces. See SPEC_FORMAT.md.
     env             optional {"NAME": "value with {device}"} for the engine process
     default_device  "gpu" | "cpu"
     support         [{"os": [...], "devices": {"nvidia_gpu": ["sm_75", ...]}, "note": "..."}]
@@ -62,7 +64,20 @@ def lit(s: str) -> str:
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 
+def normalize_args(spec: dict) -> dict:
+    """An `args` array becomes the space-joined args_template the generated C++ splits again."""
+    if "args" not in spec:
+        return spec
+    a = spec["args"]
+    if not isinstance(a, list) or not a or not all(isinstance(x, str) and x for x in a):
+        raise SpecError("args must be a non-empty array of non-empty strings")
+    if any(c.isspace() for x in a for c in x):
+        raise SpecError("args elements must not contain whitespace: the generated backend splits on spaces")
+    return {**{k: v for k, v in spec.items() if k != "args"}, "args_template": " ".join(a)}
+
+
 def validate(spec: dict) -> dict:
+    spec = normalize_args(spec)
     missing = [k for k in REQUIRED if k not in spec]
     if missing:
         raise SpecError(f"missing fields: {', '.join(missing)}")

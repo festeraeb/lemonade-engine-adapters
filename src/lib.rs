@@ -788,8 +788,28 @@ fn server_cpp(s: &Map<String, Value>) -> String {
     )
 }
 
+/// An `args` array (the plane's preferred form) becomes the space-joined `args_template` the
+/// generated C++ splits again. Specs without `args` are returned unchanged.
+pub fn normalize_args(spec: &Value) -> Result<Value, SpecError> {
+    let Some(m) = spec.as_object() else { return Ok(spec.clone()) };
+    let Some(a) = m.get("args") else { return Ok(spec.clone()) };
+    let items: Option<Vec<&str>> = a.as_array().and_then(|v| v.iter().map(|x| x.as_str().filter(|s| !s.is_empty())).collect());
+    let items = match items {
+        Some(v) if !v.is_empty() => v,
+        _ => return err("args must be a non-empty array of non-empty strings"),
+    };
+    if items.iter().any(|x| x.chars().any(char::is_whitespace)) {
+        return err("args elements must not contain whitespace: the generated backend splits on spaces");
+    }
+    let mut out = m.clone();
+    out.remove("args");
+    out.insert("args_template".into(), Value::String(items.join(" ")));
+    Ok(Value::Object(out))
+}
+
 /// Validate and render: (relative path, body) in the same order as the Python tool.
 pub fn render(spec: &Value) -> Result<Vec<(String, String)>, SpecError> {
+    let spec = &normalize_args(spec)?;
     let s = validate(spec)?;
     let stem = s["stem"].as_str().unwrap();
     Ok(vec![

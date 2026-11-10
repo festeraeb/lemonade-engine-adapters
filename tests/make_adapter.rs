@@ -42,9 +42,9 @@ fn shipped_specs_are_valid() {
 fn rejects() {
     let cases: Vec<(&str, Value)> = vec![
         ("missing field", bad(vec![("identity", Value::Null)])),
-        ("no {model}", bad(vec![("args_template", json!("serve --port {port}"))])),
-        ("shell syntax", bad(vec![("args_template", json!("serve --model {model} --port {port} | tee log"))])),
-        ("unknown placeholder", bad(vec![("args_template", json!("serve --model {model} --port {port} --ctx {ctx}"))])),
+        ("no {model}", bad(vec![("args", json!(["serve", "--port", "{port}"]))])),
+        ("shell syntax", bad(vec![("args", json!(["serve", "--model", "{model}", "--port", "{port}", "|", "tee", "log"]))])),
+        ("unknown placeholder", bad(vec![("args", json!(["serve", "--model", "{model}", "--port", "{port}", "--ctx", "{ctx}"]))])),
         ("binary with path", bad(vec![("binary", json!("/usr/bin/ft"))])),
         ("bad recipe", bad(vec![("recipe", json!("Free_Token"))])),
         ("bad device family", bad(vec![("support", json!([{"os": ["linux"], "devices": {"cuda": []}}]))])),
