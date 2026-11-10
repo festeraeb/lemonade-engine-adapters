@@ -1,0 +1,27 @@
+{
+  "recipe": "bonsaicpu",
+  "stem": "bonsaicpu",
+  "class_prefix": "BonsaiCpu",
+  "display_name": "Ternary Bonsai on CPU (PrismML llama.cpp build, PQ2_0)",
+  "binary": "llama-server",
+  "spec_version": 1,
+  "args": ["-m", "{model}", "--host", "127.0.0.1", "--port", "{port}", "-dev", "none", "-ngl", "0", "-c", "4096", "-np", "1", "--reasoning-budget", "0"],
+  "env": {
+    "CUDA_VISIBLE_DEVICES": "-1",
+    "GGML_VK_VISIBLE_DEVICES": "-1"
+  },
+  "default_device": "cpu",
+  "support": [
+    {"os": ["linux"], "devices": {"cpu": ["x86_64"]}, "note": "x86_64 CPU; the PrismML build carries every ggml CPU variant (AVX through AVX-512) and picks one at start"}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 900, "json_field": "status", "ready_values": ["ok"], "loading_values": ["loading model"]},
+  "identity": {"owned_by": "llamacpp"},
+  "completion": true,
+  "notes": [
+    "The ternary engine the fleet runs as the `bonsai-cpu-t440` seat: PrismML's llama.cpp fork (catalogue ids bonsai, bonsaicpu), PQ2_0 ternary GGUFs, no GPU.",
+    "`llama-server` must be that build on lemond's PATH (the catalogue's llama-prism-b10822-bf8c069 folder, or the fleet's /mnt/fast/prism-bonsai/bin).",
+    "Measured 2026-11-10 on t440 with Ternary-Bonsai-2-27B-PQ2_0.gguf; see CONFORMANCE.md."
+  ]
+}

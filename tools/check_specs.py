@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC_VERSION = 1  # kSpecVersion
 PLACEHOLDERS = {"port", "model", "model_path", "device", "gpu_uuids", "ctx", "spec_dir"}
 ENV_PREFIXES = ("CUDA_", "HIP_", "ROCR_", "HSA_", "GGML_", "LLAMA_", "OMP_", "MKL_", "VK_",
-                "NAUTIBURN_", "STRATA_", "LEMONADE_ENGINE_")
+                "NAUTIBURN_", "STRATA_", "LB_", "LEMONADE_ENGINE_")
 ENV_NAMES = {"LD_LIBRARY_PATH", "TZ"}
 # Required by the plane (check_spec) ...
 PLANE_REQUIRED = ("binary", "args")

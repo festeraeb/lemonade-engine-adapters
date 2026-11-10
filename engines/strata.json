@@ -1,0 +1,29 @@
+{
+  "recipe": "strata",
+  "stem": "strata",
+  "class_prefix": "Strata",
+  "display_name": "Strata (MoE streaming server, signed Terminal)",
+  "binary": "strata",
+  "spec_version": 1,
+  "args": ["serve", "--profile", "{model}", "--host", "127.0.0.1", "--port", "{port}"],
+  "env": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "CUDA_VISIBLE_DEVICES": "{device}"
+  },
+  "default_device": "gpu",
+  "support": [
+    {"os": ["linux"], "devices": {"nvidia_gpu": ["sm_75", "sm_80", "sm_86", "sm_89", "sm_90", "sm_100", "sm_120"], "amd_gpu": ["rocm"]},
+     "note": "NVIDIA or AMD GPU with 12 GB or more; the engine for the card is fetched from Strata's signed feed. No CPU-only engine."}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 1800, "json_field": "status", "ready_values": ["ok"]},
+  "identity": {"owned_by": "strata", "unreported": true},
+  "completion": true,
+  "notes": [
+    "Strata (github.com/Niko1221/Strata, catalogue id strata, Terminal 0.1.59.1 from the v0.2.3.1 feed). `strata` must be on lemond's PATH (the Terminal's install folder).",
+    "{model} is a Strata run config JSON (`strata models` lists the ones setup wrote: exe, args, tokenizer, model_name). `strata serve --profile` starts the server in the foreground; `strata launch` is the interactive installer path and is not used here.",
+    "Strata's own /v1/models objects carry no owned_by, and lemond refuses an engine whose /v1/models does not report the spec's owned_by (adapter_server.cpp), so identity.unreported is set (the plane skips the check; make_adapter still reads owned_by) until Strata reports one. Measured 2026-11-10: with unreported unset the load is refused with \"does not report owned_by=strata; refusing a mislabelled engine\".",
+    "CPU-only check 2026-11-10: `strata serve --engine mock` (scripted engine, no model) serves /health and /v1/chat/completions, which exercises the plane's lifecycle only; a real engine needs a CUDA or ROCm card and the 84 GB model (see CONFORMANCE.md)."
+  ]
+}

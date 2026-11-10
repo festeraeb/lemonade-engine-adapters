@@ -1,0 +1,27 @@
+{
+  "recipe": "nautistrata",
+  "stem": "nautistrata",
+  "class_prefix": "NautiStrata",
+  "display_name": "Nauti-Strata (PolyStrata build for Pascal and AVX-only CPUs)",
+  "binary": "nautistrata-serve",
+  "spec_version": 1,
+  "args": ["--engine", "strata", "--config", "{model}", "--host", "127.0.0.1", "--port", "{port}", "--gpu", "{device}"],
+  "env": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
+  },
+  "default_device": "gpu",
+  "support": [
+    {"os": ["linux"], "devices": {"nvidia_gpu": ["sm_60", "sm_61", "sm_75", "sm_86"]},
+     "note": "NVIDIA GPU, GTX 10-series or newer, 8 GB or more, CUDA 12 driver. strata-poly calls cudaStreamCreate at start: no CUDA device, no engine (the CPU only holds the experts that do not fit in VRAM)."}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 1800, "json_field": "status", "ready_values": ["ok"]},
+  "identity": {"owned_by": "polystrata", "unreported": true},
+  "completion": true,
+  "notes": [
+    "Nauti-Strata 0.1.44.1 (github.com/festeraeb/Nauti-Strata, catalogue id nautistrata, the Stand bundle). `nautistrata-serve` is a one-line wrapper on lemond's PATH: exec <install>/venv/bin/python <install>/serve/server.py \"$@\" (the Stand's stand/start.sh does the same after writing strata-stand.json).",
+    "{model} is the run config the Stand writes (`strata-stand.json`: exe bin/strata-poly-avx2, args --model <gguf>, tokenizer, model_name, lib_dirs).",
+    "Same server as PolyStrata, so /v1/models has no owned_by; identity.unreported is set so the plane skips its identity check (refused at load without it, measured 2026-11-10). One-line fix in serve/server.py: add \"owned_by\": \"polystrata\" to the /v1/models objects, then set it here."
+  ]
+}

@@ -35,9 +35,16 @@ space-split string for the C++ it generates, so an `args` element must not conta
 ## env allowlist
 
 `env` is an object name -> string; values may use the placeholders above. A name must start with one of
-`CUDA_ HIP_ ROCR_ HSA_ GGML_ LLAMA_ OMP_ MKL_ VK_ NAUTIBURN_ STRATA_ LEMONADE_ENGINE_`, or be exactly
+`CUDA_ HIP_ ROCR_ HSA_ GGML_ LLAMA_ OMP_ MKL_ VK_ NAUTIBURN_ STRATA_ LB_ LEMONADE_ENGINE_`, or be exactly
 `LD_LIBRARY_PATH` or `TZ`. `LD_LIBRARY_PATH` entries (split on `:`) must be absolute, contain no `..`, and
 lie inside a directory lemond allows. Anything else is refused at load.
+
+## identity
+
+`identity.owned_by` names the engine; the plane refuses a load when no `/v1/models` object reports that
+`owned_by` (`adapter_server.cpp`: "does not report owned_by=...; refusing a mislabelled engine"). For an engine
+that reports none (Strata, PolyStrata, Nauti-Strata) set `"unreported": true` beside it: the plane skips the check,
+`make_adapter` still reads `owned_by`. Plane commit eb6186c5c on cesarops/adapter-plane-46.
 
 ## ready probe
 
