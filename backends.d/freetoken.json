@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "id": "freetoken",
+  "recipe": "freetoken",
+  "kind": "local",
+  "metadata": {
+    "display_name": "FreeToken (edge-native MoE engine)",
+    "server_name": "ft",
+    "log_category": "FreeToken",
+    "binary": "ft",
+    "config_section": "freetoken",
+    "default_device": "gpu",
+    "slot_policy": "standard",
+    "options": [
+      {
+        "name": "freetoken_device",
+        "default_value": "0",
+        "type_name": "DEVICES",
+        "value_type": "string",
+        "help": "GPU this engine runs on (the value the engine's own flag takes)",
+        "group": "FreeToken (edge-native MoE engine)",
+        "unset_values": [
+          null
+        ]
+      }
+    ],
+    "support": [
+      {
+        "backend": "cuda",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "nvidia_gpu": [
+            "sm_75",
+            "sm_80",
+            "sm_86",
+            "sm_89",
+            "sm_90",
+            "sm_100",
+            "sm_120"
+          ]
+        },
+        "device_summary": "NVIDIA GPU, Turing or newer (CUDA 13, driver r580+); on Turing uninstall sglang-kernel",
+        "arch_gates": {}
+      }
+    ],
+    "supported_modes": [
+      "chat"
+    ],
+    "required_checkpoints": [
+      "main"
+    ],
+    "bin_variants": [
+      "cuda"
+    ]
+  },
+  "install": {
+    "strategy": "external_only"
+  },
+  "launch": {
+    "prepare_order": [
+      "artifacts",
+      "backend",
+      "program",
+      "ports"
+    ],
+    "backend": {
+      "fixed": "cuda"
+    },
+    "program": {
+      "source": "external_or_managed",
+      "install_policy": "always"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "reject_zero": true,
+        "error": "freetoken: no free port"
+      }
+    ],
+    "argv": [
+      {
+        "args": [
+          "serve",
+          "--model",
+          {
+            "ref": "/model/checkpoint",
+            "type": "string"
+          },
+          "--host",
+          "127.0.0.1",
+          "--port",
+          {
+            "string": {
+              "ref": "/launch/ports/http"
+            }
+          },
+          "--dtype",
+          "float16",
+          "--moe-strategy",
+          "offload",
+          "--moe-cache-auto",
+          "--memory-ratio",
+          "0.85",
+          "--gpu",
+          "0"
+        ]
+      }
+    ],
+    "environment": {
+      "preset": "inherit",
+      "set": [
+        {
+          "name": "CUDA_DEVICE_ORDER",
+          "value": "PCI_BUS_ID"
+        },
+        {
+          "name": "CUDA_VISIBLE_DEVICES",
+          "value": {
+            "string": {
+              "ref": "/options/freetoken_device"
+            }
+          }
+        }
+      ]
+    },
+    "working_directory": "inherit",
+    "output": {
+      "inherit_levels": [
+        "debug"
+      ],
+      "filter": false
+    },
+    "readiness": {
+      "port": "http",
+      "path": "/health",
+      "timeout": 1800
+    },
+    "watchdog": {
+      "policy": "standard",
+      "port": "http",
+      "path": "/health"
+    }
+  },
+  "operations": [
+    {
+      "operation": "chat_completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "chat_completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ any built-in model. Part of NautiK9 Lemonade Stand.
 | `make_adapter.py` | the original Python generator, kept until the operator retires it |
 | `engines/*.json` | engine specs: `freetoken`, `lemonade-burn`, `polystrata` (spec checked, not yet loaded; see `POLYSTRATA.md`) |
 | `engines/drafts/*.json` | unverified drafts for Bitter Lemons (`rea`, `movidius`); not built or tested |
+| `backends.d/*.json`, `tools/to_backend_definition.py` | the same engines as hook-free backend definitions for lemonade-sdk/lemonade#3906, and the converter; see `BACKEND_DEFINITIONS.md` |
 | `ADAPTER_PROMPT.md` | instructions for an agent to wrap a new engine, with the five gates |
 | `tests/make_adapter.rs` | `cargo test` (port of the 7 Python tests) |
 | `tests/test_make_adapter.py` | `python3 -I tests/test_make_adapter.py` (old) |

@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "id": "nautistrata",
+  "recipe": "nautistrata",
+  "kind": "local",
+  "metadata": {
+    "display_name": "Nauti-Strata (PolyStrata build for Pascal and AVX-only CPUs)",
+    "server_name": "nautistrata-serve",
+    "log_category": "NautiStrata",
+    "binary": "nautistrata-serve",
+    "config_section": "nautistrata",
+    "default_device": "gpu",
+    "slot_policy": "standard",
+    "options": [
+      {
+        "name": "nautistrata_device",
+        "default_value": "",
+        "type_name": "DEVICES",
+        "value_type": "string",
+        "help": "GPU this engine runs on (the value the engine's own flag takes)",
+        "group": "Nauti-Strata (PolyStrata build for Pascal and AVX-only CPUs)",
+        "unset_values": [
+          null
+        ]
+      }
+    ],
+    "support": [
+      {
+        "backend": "cuda",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "nvidia_gpu": [
+            "sm_60",
+            "sm_61",
+            "sm_75",
+            "sm_86"
+          ]
+        },
+        "device_summary": "NVIDIA GPU, GTX 10-series or newer, 8 GB or more, CUDA 12 driver. strata-poly calls cudaStreamCreate at start: no CUDA device, no engine (the CPU only holds the experts that do not fit in VRAM).",
+        "arch_gates": {}
+      }
+    ],
+    "supported_modes": [
+      "chat"
+    ],
+    "required_checkpoints": [
+      "main"
+    ],
+    "bin_variants": [
+      "cuda"
+    ]
+  },
+  "install": {
+    "strategy": "external_only"
+  },
+  "launch": {
+    "prepare_order": [
+      "artifacts",
+      "backend",
+      "program",
+      "ports"
+    ],
+    "backend": {
+      "fixed": "cuda"
+    },
+    "program": {
+      "source": "external_or_managed",
+      "install_policy": "always"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "reject_zero": true,
+        "error": "nautistrata: no free port"
+      }
+    ],
+    "argv": [
+      {
+        "args": [
+          "--engine",
+          "strata",
+          "--config",
+          {
+            "ref": "/model/checkpoint",
+            "type": "string"
+          },
+          "--host",
+          "127.0.0.1",
+          "--port",
+          {
+            "string": {
+              "ref": "/launch/ports/http"
+            }
+          }
+        ]
+      },
+      {
+        "when": {
+          "not": {
+            "eq": [
+              {
+                "ref": "/options/nautistrata_device"
+              },
+              ""
+            ]
+          }
+        },
+        "args": [
+          "--gpu",
+          {
+            "string": {
+              "ref": "/options/nautistrata_device"
+            }
+          }
+        ]
+      }
+    ],
+    "environment": {
+      "preset": "inherit",
+      "set": [
+        {
+          "name": "CUDA_DEVICE_ORDER",
+          "value": "PCI_BUS_ID"
+        }
+      ]
+    },
+    "working_directory": "inherit",
+    "output": {
+      "inherit_levels": [
+        "debug"
+      ],
+      "filter": false
+    },
+    "readiness": {
+      "port": "http",
+      "path": "/health",
+      "timeout": 1800
+    },
+    "watchdog": {
+      "policy": "standard",
+      "port": "http",
+      "path": "/health"
+    }
+  },
+  "operations": [
+    {
+      "operation": "chat_completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "chat_completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "recipe": "llamacpp-local",
+  "stem": "llamacpplocal",
+  "class_prefix": "LlamaCppLocal",
+  "display_name": "llama.cpp (a CUDA build you compiled yourself)",
+  "binary": "llama-server",
+  "spec_version": 1,
+  "args": ["-m", "{model}", "--host", "127.0.0.1", "--port", "{port}", "-ngl", "99", "-c", "4096", "-np", "1", "--metrics", "--device", "{device}"],
+  "env": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
+  },
+  "library_dir": "binary",
+  "prometheus_metrics": true,
+  "default_device": "gpu",
+  "support": [
+    {"os": ["linux"], "devices": {"nvidia_gpu": ["sm_60", "sm_61", "sm_75", "sm_86"]},
+     "note": "NVIDIA GPU, CUDA 12 driver; the architectures are the ones the build was compiled for"}
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 600, "json_field": "status", "ready_values": ["ok"], "loading_values": ["loading model"]},
+  "identity": {"owned_by": "llamacpp"},
+  "completion": true,
+  "notes": [
+    "Any llama-server built from source with CUDA, with its libggml/libllama libraries in the folder beside it (`library_dir: binary`).",
+    "{device} is llama-server's own device name (`llama-server --list-devices`: CUDA0, CUDA1, ...). CUDA_DEVICE_ORDER=PCI_BUS_ID makes CUDA0 the same card nvidia-smi calls 0.",
+    "Measured 2026-11-13 on a Tesla P100 through lemond built from lemonade-sdk/lemonade#3906; see BACKEND_DEFINITIONS.md."
+  ]
+}

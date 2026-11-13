@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "id": "lemonade-burn-lfm2",
+  "recipe": "lemonade-burn-lfm2",
+  "kind": "local",
+  "metadata": {
+    "display_name": "lemonade-burn LFM2 (our MoE engine: Burn + CubeCL, GGUF Q4_0)",
+    "server_name": "lemonade-burn-server",
+    "log_category": "BurnLfm2",
+    "binary": "lemonade-burn-server",
+    "config_section": "lemonade_burn_lfm2",
+    "default_device": "gpu",
+    "slot_policy": "standard",
+    "options": [
+      {
+        "name": "lemonade_burn_lfm2_device",
+        "default_value": "0",
+        "type_name": "DEVICES",
+        "value_type": "string",
+        "help": "GPU this engine runs on (the value the engine's own flag takes)",
+        "group": "lemonade-burn LFM2 (our MoE engine: Burn + CubeCL, GGUF Q4_0)",
+        "unset_values": [
+          null
+        ]
+      }
+    ],
+    "support": [
+      {
+        "backend": "cpu",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "cpu": [
+            "x86_64"
+          ]
+        },
+        "device_summary": "Experts resident on any wgpu (Vulkan) card within --gpu-budget-mb; the rest of the model runs on the CPU. {device} is a LB_WGPU_DEVICE spec: default, discrete:N or integrated:N.",
+        "arch_gates": {}
+      },
+      {
+        "backend": "rocm",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "amd_gpu": [
+            "vulkan"
+          ]
+        },
+        "device_summary": "Experts resident on any wgpu (Vulkan) card within --gpu-budget-mb; the rest of the model runs on the CPU. {device} is a LB_WGPU_DEVICE spec: default, discrete:N or integrated:N.",
+        "arch_gates": {}
+      },
+      {
+        "backend": "cuda",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "nvidia_gpu": [
+            "vulkan"
+          ]
+        },
+        "device_summary": "Experts resident on any wgpu (Vulkan) card within --gpu-budget-mb; the rest of the model runs on the CPU. {device} is a LB_WGPU_DEVICE spec: default, discrete:N or integrated:N.",
+        "arch_gates": {}
+      }
+    ],
+    "supported_modes": [
+      "chat"
+    ],
+    "required_checkpoints": [
+      "main"
+    ],
+    "bin_variants": [
+      "cpu",
+      "rocm",
+      "cuda"
+    ]
+  },
+  "install": {
+    "strategy": "external_only"
+  },
+  "launch": {
+    "prepare_order": [
+      "artifacts",
+      "backend",
+      "program",
+      "ports"
+    ],
+    "backend": {
+      "fixed": "rocm"
+    },
+    "program": {
+      "source": "external_or_managed",
+      "install_policy": "always"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "reject_zero": true,
+        "error": "lemonade-burn-lfm2: no free port"
+      }
+    ],
+    "argv": [
+      {
+        "args": [
+          "--model",
+          {
+            "ref": "/model/checkpoint",
+            "type": "string"
+          },
+          "--host",
+          "127.0.0.1",
+          "--port",
+          {
+            "string": {
+              "ref": "/launch/ports/http"
+            }
+          },
+          "--placement-from-scrapes",
+          "/var/lib/nautiburn/scrape-lfm2",
+          "--gpu-budget-mb",
+          "4000",
+          "--gpu"
+        ]
+      }
+    ],
+    "environment": {
+      "preset": "inherit",
+      "set": [
+        {
+          "name": "LB_WGPU_DEVICE",
+          "value": {
+            "string": {
+              "ref": "/options/lemonade_burn_lfm2_device"
+            }
+          }
+        },
+        {
+          "name": "NAUTIBURN_SCRAPE_DIR",
+          "value": "/var/lib/nautiburn/scrape-lfm2"
+        }
+      ]
+    },
+    "working_directory": "inherit",
+    "output": {
+      "inherit_levels": [
+        "debug"
+      ],
+      "filter": false
+    },
+    "readiness": {
+      "port": "http",
+      "path": "/health",
+      "timeout": 1800
+    },
+    "watchdog": {
+      "policy": "standard",
+      "port": "http",
+      "path": "/health"
+    }
+  },
+  "operations": [
+    {
+      "operation": "chat_completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "chat_completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    }
+  ]
+}

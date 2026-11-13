@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "id": "lemonade-burn",
+  "recipe": "lemonade-burn",
+  "kind": "local",
+  "metadata": {
+    "display_name": "lemonade-burn (Burn + ternary CPU kernels)",
+    "server_name": "lemonade-burn-server",
+    "log_category": "Burn",
+    "binary": "lemonade-burn-server",
+    "config_section": "lemonade_burn",
+    "default_device": "cpu",
+    "slot_policy": "standard",
+    "options": [],
+    "support": [
+      {
+        "backend": "cpu",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "cpu": [
+            "x86_64"
+          ]
+        },
+        "device_summary": "x86_64 CPU (AVX2 / AVX-512 ternary kernels)",
+        "arch_gates": {}
+      }
+    ],
+    "supported_modes": [
+      "chat"
+    ],
+    "required_checkpoints": [
+      "main"
+    ],
+    "bin_variants": [
+      "cpu"
+    ]
+  },
+  "install": {
+    "strategy": "external_only"
+  },
+  "launch": {
+    "prepare_order": [
+      "artifacts",
+      "backend",
+      "program",
+      "ports"
+    ],
+    "backend": {
+      "fixed": "cpu"
+    },
+    "program": {
+      "source": "external_or_managed",
+      "install_policy": "always"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "reject_zero": true,
+        "error": "lemonade-burn: no free port"
+      }
+    ],
+    "argv": [
+      {
+        "args": [
+          "--model",
+          {
+            "ref": "/model/checkpoint",
+            "type": "string"
+          },
+          "--host",
+          "127.0.0.1",
+          "--port",
+          {
+            "string": {
+              "ref": "/launch/ports/http"
+            }
+          }
+        ]
+      }
+    ],
+    "environment": {
+      "preset": "inherit",
+      "set": []
+    },
+    "working_directory": "inherit",
+    "output": {
+      "inherit_levels": [
+        "debug"
+      ],
+      "filter": false
+    },
+    "readiness": {
+      "port": "http",
+      "path": "/health",
+      "timeout": 600
+    },
+    "watchdog": {
+      "policy": "standard",
+      "port": "http",
+      "path": "/health"
+    }
+  },
+  "operations": [
+    {
+      "operation": "chat_completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "chat_completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    }
+  ]
+}
