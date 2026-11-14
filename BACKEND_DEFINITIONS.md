@@ -62,3 +62,45 @@ which reads the same definition file `lemond` runs.
 - All eight definitions in `backends.d/` load together in that `lemond` and pass `lemonade backends validate`.
 - Not run: `freetoken`, `strata`, `polystrata`, `lemonade-burn-lfm2` (engine or model not on that host).
 - L2 used the same model registered under two names, except `llamacpp-local`.
+
+## Bringing an engine in without a spec: `tools/adapt_engine.py`
+
+```bash
+python3 tools/adapt_engine.py --binary /path/to/engine-server --model /path/to/small-model \
+    --lemond <fork>/build/lemond --lemonade <fork>/build/lemonade \
+    --conformance <fork>/tools/backend_conformance.py \
+    [--helper-url http://host:port/v1 --helper-model ID | --no-helper] [--cpus 40-47] [--compare-with backends.d/x.json]
+```
+
+(The fork branch has a thin `tools/adapt_engine.py` that finds this checkout and fills in its own lemond, lemonade and
+conformance paths.) It probes `--help` / `--version`, picks the flags for port, host, model, context size, device, threads,
+API key and metrics with a deterministic scorer, launches the engine on a free port and calls `/health`, `/v1/models`,
+`/v1/chat/completions` (buffered and streaming), `/v1/completions` and `/metrics`, writes `engines/<name>.json` and
+`backends.d/<name>.json` (through `to_backend_definition.py`), starts a throwaway lemond with it, grades it with the
+conformance tool, repairs by rule and repeats at most `--rounds` times, and prints the level per check with the reason for
+each one not reached. GPUs are hidden from the engine unless `--allow-gpu`; every process it starts is stopped by PID.
+
+A small local model (`--helper-url`) is asked only for a role the scorer cannot decide. It must answer one JSON object
+`{"flag", "evidence"}`; the answer is rejected unless the flag is written in the `--help` text, the quoted line is a line
+of that text naming the flag, the flag takes a value, and it is not on the role's exclusion list. An accepted flag is
+removed again if the engine then fails to load with it. Every call is appended to `helper-calls.jsonl`. `--no-helper`
+leaves undecided roles out and says so. This is Python, extending the existing tools, as a proof of concept.
+
+Measured 2026-11-14 on t440, CPU only (GPUs hidden, every process pinned to 8 CPUs), lemond from
+`cesarops/conformance-on-3906`; the same rig graded the hand-written definition (`--compare-with`):
+
+| Engine, model | Automatic | Hand-written | Helper calls |
+|---|---|---|---|
+| llama.cpp server build 0.7.0-dev (d0a03c0a3), LFM2-2.6B Q4_K_M | L2 (L4 check passes) | L2 (L4 check passes) | 0 |
+| Ternary Bonsai llama.cpp fork (build 10777), Ternary-Bonsai-2-27B PQ2_0 | L2 (L4 check passes) | L2 (L4 check passes) | 0 |
+| lemonade-burn-server, BitNet 2B | L2 | L2 | 1 (device flag: answered "no such flag") |
+| `tests/fixtures/oddengine.py`, a stub with unusual flag names (not an engine) | L2 | no hand-written spec | 3 (ctx flag accepted, two "no such flag") |
+
+L3 is not tested on CPU, so L4 does not count in the earned level. The automatic llama.cpp definition has a device option
+(`--device`); the hand-written Bonsai one has none. The earlier L4 on a Tesla P100 was not repeated for an automatic
+definition. The repair rules (remove a flag the engine rejects, add the library folder, longer timeout, other readiness
+path, remove a helper-chosen flag) are unit-tested but were not triggered in these runs.
+
+```bash
+python3 -I tests/test_adapt_engine.py     # 24 tests: parser, scorer, helper validation, repair rules, a live stub engine
+```
