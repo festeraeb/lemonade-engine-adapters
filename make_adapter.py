@@ -51,6 +51,15 @@ PATH_RE = re.compile(r"^/[A-Za-z0-9_./-]*$")
 DEVICE_FAMILIES = {"nvidia_gpu", "amd_gpu", "cpu", "metal", "npu"}
 OSES = {"linux", "windows", "macos"}
 PLACEHOLDERS = {"model", "port", "device"}
+# The adapter plane (lemonade AdapterServer, cesarops/adapter-hooks) fills these as well; a spec that uses them
+# says "targets": ["adapter_plane"] and is turned into a backends.d definition (tools/to_backend_definition.py),
+# never into generated C++, which can only fill the three above.
+PLANE_PLACEHOLDERS = PLACEHOLDERS | {"model_path", "gpu_uuids", "ctx", "spec_dir"}
+TARGETS = {"generated", "adapter_plane"}
+
+
+def plane_only(spec: dict) -> bool:
+    return list(spec.get("targets") or ["generated", "adapter_plane"]) == ["adapter_plane"]
 REQUIRED = ("recipe", "stem", "class_prefix", "display_name", "binary", "args_template", "default_device",
             "support", "modes", "checkpoint", "ready", "identity")
 
@@ -93,10 +102,15 @@ def validate(spec: dict) -> dict:
     for ph in ("{model}", "{port}"):
         if ph not in tmpl:
             raise SpecError(f"args_template must contain {ph}")
+    targets = spec.get("targets")
+    if targets is not None and (not isinstance(targets, list) or not targets or not set(targets) <= TARGETS):
+        raise SpecError(f"targets must be a non-empty list from {sorted(TARGETS)}")
+    allowed = PLANE_PLACEHOLDERS if plane_only(spec) else PLACEHOLDERS
     texts = [tmpl] + list((spec.get("env") or {}).values())
-    unknown = {p for t in texts for p in re.findall(r"\{([a-z_]+)\}", t)} - PLACEHOLDERS
+    unknown = {p for t in texts for p in re.findall(r"\{([a-z_]+)\}", t)} - allowed
     if unknown:
-        raise SpecError(f"unknown placeholders {sorted(unknown)}; allowed: {sorted(PLACEHOLDERS)}")
+        hint = "" if plane_only(spec) else ' (the adapter plane also has ctx, gpu_uuids, model_path, spec_dir: set "targets": ["adapter_plane"])'
+        raise SpecError(f"unknown placeholders {sorted(unknown)}; allowed: {sorted(allowed)}{hint}")
     if any(c in tmpl for c in "\"'`$|;&<>"):
         raise SpecError("args_template is split on spaces without a shell: no quotes, $, pipes or redirects")
     for k in (spec.get("env") or {}):
@@ -489,6 +503,9 @@ const BackendOps* ops() {{
 
 def render(spec: dict) -> dict[str, str]:
     s = validate(spec)
+    if plane_only(s):
+        raise SpecError(f"{s['recipe']}: an adapter-plane-only spec has no generated C++; "
+                        "use tools/to_backend_definition.py for its backends.d definition")
     stem = s["stem"]
     return {
         f"src/cpp/include/lemon/backends/{stem}/{stem}.h": descriptor_h(s),

@@ -28,7 +28,23 @@ class Validation(unittest.TestCase):
     def test_shipped_specs_are_valid(self):
         for p in sorted((ROOT / "engines").glob("*.json")):
             with self.subTest(spec=p.name):
-                ma.render(json.loads(p.read_text()))
+                spec = json.loads(p.read_text())
+                if ma.plane_only(spec):
+                    ma.validate(spec)  # backends.d only: checked by test_to_backend_definition
+                    with self.assertRaises(ma.SpecError):
+                        ma.render(spec)
+                else:
+                    ma.render(spec)
+
+    def test_plane_only_placeholders(self):
+        spec = bad(args=["serve", "--model", "{model}", "--port", "{port}", "--ctx", "{ctx}"])
+        spec["targets"] = ["adapter_plane"]
+        ma.validate(spec)
+        with self.assertRaises(ma.SpecError):
+            ma.render(spec)
+        spec["targets"] = ["nonsense"]
+        with self.assertRaises(ma.SpecError):
+            ma.validate(spec)
 
     def test_rejects(self):
         cases = {

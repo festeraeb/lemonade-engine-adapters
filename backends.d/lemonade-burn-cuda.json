@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "id": "lemonade-burn-cuda",
+  "recipe": "lemonade-burn-cuda",
+  "kind": "local",
+  "metadata": {
+    "display_name": "lemonade-burn CUDA (MoE on one or more NVIDIA GPUs)",
+    "server_name": "lemonade-burn-server",
+    "log_category": "BurnCuda",
+    "binary": "lemonade-burn-server",
+    "config_section": "lemonade_burn_cuda",
+    "default_device": "gpu",
+    "slot_policy": "standard",
+    "options": [
+      {
+        "name": "lemonade_burn_cuda_device",
+        "default_value": "0",
+        "type_name": "DEVICES",
+        "value_type": "string",
+        "help": "GPU this engine runs on (the value the engine's own flag takes)",
+        "group": "lemonade-burn CUDA (MoE on one or more NVIDIA GPUs)",
+        "unset_values": [
+          null
+        ]
+      }
+    ],
+    "support": [
+      {
+        "backend": "cuda",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "nvidia_gpu": [
+            "sm_60",
+            "sm_75"
+          ]
+        },
+        "device_summary": "Run on Tesla P100 (sm_60), RTX 2060 and Tesla T10 (sm_75). Kernels are compiled at run time by NVRTC, so newer cards may work, but none has been tested.",
+        "arch_gates": {}
+      }
+    ],
+    "supported_modes": [
+      "chat"
+    ],
+    "required_checkpoints": [
+      "main"
+    ],
+    "bin_variants": [
+      "cuda"
+    ]
+  },
+  "install": {
+    "strategy": "external_only"
+  },
+  "launch": {
+    "prepare_order": [
+      "artifacts",
+      "backend",
+      "program",
+      "ports"
+    ],
+    "backend": {
+      "fixed": "cuda"
+    },
+    "program": {
+      "source": "external_or_managed",
+      "install_policy": "always"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "reject_zero": true,
+        "error": "lemonade-burn-cuda: no free port"
+      }
+    ],
+    "argv": [
+      {
+        "args": [
+          "--model",
+          {
+            "ref": "/model/checkpoint",
+            "type": "string"
+          },
+          "--host",
+          "127.0.0.1",
+          "--port",
+          {
+            "string": {
+              "ref": "/launch/ports/http"
+            }
+          },
+          "--ctx",
+          {
+            "string": {
+              "ref": "/options/ctx_size"
+            }
+          },
+          "--gpu",
+          "--whole-layers",
+          "--gpu-budget-mb",
+          "14500",
+          "--gpu-dense-mb",
+          "900"
+        ]
+      }
+    ],
+    "environment": {
+      "preset": "executable_loader_path",
+      "set": [
+        {
+          "name": "CUDA_DEVICE_ORDER",
+          "value": "PCI_BUS_ID"
+        },
+        {
+          "name": "CUDA_VISIBLE_DEVICES",
+          "value": {
+            "string": {
+              "ref": "/options/lemonade_burn_cuda_device"
+            }
+          }
+        },
+        {
+          "name": "LB_CUDA_DEVICE",
+          "value": "0"
+        },
+        {
+          "name": "LB_QW_PREFILL_CHUNK",
+          "value": "256"
+        }
+      ]
+    },
+    "working_directory": "inherit",
+    "output": {
+      "inherit_levels": [
+        "debug"
+      ],
+      "filter": false
+    },
+    "readiness": {
+      "port": "http",
+      "path": "/health",
+      "timeout": 1800
+    },
+    "watchdog": {
+      "policy": "standard",
+      "port": "http",
+      "path": "/health"
+    }
+  },
+  "operations": [
+    {
+      "operation": "chat_completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "chat_completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "chat"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    }
+  ]
+}

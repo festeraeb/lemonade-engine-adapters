@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "id": "llamacpp-embed",
+  "recipe": "llamacpp-embed",
+  "kind": "local",
+  "metadata": {
+    "display_name": "llama.cpp embeddings (local GGUF embedding pool)",
+    "server_name": "llama-server",
+    "log_category": "LlamaCppEmbed",
+    "binary": "llama-server",
+    "config_section": "llamacpp_embed",
+    "default_device": "cpu",
+    "slot_policy": "standard",
+    "options": [],
+    "support": [
+      {
+        "backend": "cpu",
+        "tier": "guest",
+        "format": "native",
+        "supported_os": [
+          "linux"
+        ],
+        "devices": {
+          "cpu": [
+            "x86_64"
+          ]
+        },
+        "device_summary": "CPU embedding worker matching the cesarops4 (:5300-5304) and t440 (:5210) embeddinggemma-300m pool.",
+        "arch_gates": {}
+      }
+    ],
+    "supported_modes": [
+      "embedding"
+    ],
+    "required_checkpoints": [
+      "main"
+    ],
+    "bin_variants": [
+      "cpu"
+    ]
+  },
+  "install": {
+    "strategy": "external_only"
+  },
+  "launch": {
+    "prepare_order": [
+      "artifacts",
+      "backend",
+      "program",
+      "ports"
+    ],
+    "backend": {
+      "fixed": "cpu"
+    },
+    "program": {
+      "source": "external_or_managed",
+      "install_policy": "always"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "reject_zero": true,
+        "error": "llamacpp-embed: no free port"
+      }
+    ],
+    "argv": [
+      {
+        "args": [
+          "-m",
+          {
+            "ref": "/model/checkpoint",
+            "type": "string"
+          },
+          "--host",
+          "127.0.0.1",
+          "--port",
+          {
+            "string": {
+              "ref": "/launch/ports/http"
+            }
+          },
+          "--embedding",
+          "--pooling",
+          "mean",
+          "-c",
+          {
+            "string": {
+              "ref": "/options/ctx_size"
+            }
+          },
+          "-b",
+          "2048",
+          "-ub",
+          "2048",
+          "-ngl",
+          "0"
+        ]
+      }
+    ],
+    "environment": {
+      "preset": "inherit",
+      "set": [
+        {
+          "name": "CUDA_VISIBLE_DEVICES",
+          "value": "-1"
+        },
+        {
+          "name": "GGML_VK_VISIBLE_DEVICES",
+          "value": "-1"
+        }
+      ]
+    },
+    "working_directory": "inherit",
+    "output": {
+      "inherit_levels": [
+        "debug"
+      ],
+      "filter": false
+    },
+    "readiness": {
+      "port": "http",
+      "path": "/health",
+      "timeout": 300
+    },
+    "watchdog": {
+      "policy": "standard",
+      "port": "http",
+      "path": "/health"
+    }
+  },
+  "operations": [
+    {
+      "operation": "chat_completion",
+      "delivery": "buffered",
+      "model_modes": [
+        "embedding"
+      ],
+      "transport": {
+        "kind": "http_json",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "response_codec": "json.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    },
+    {
+      "operation": "chat_completion",
+      "delivery": "streaming",
+      "model_modes": [
+        "embedding"
+      ],
+      "transport": {
+        "kind": "http_sse",
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "port": "http",
+        "timeout": "global",
+        "stream_codec": "openai_sse.v1"
+      },
+      "request": {
+        "base": "identity",
+        "remove": [],
+        "set": {},
+        "omit_missing": false
+      }
+    }
+  ]
+}

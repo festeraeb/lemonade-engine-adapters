@@ -5,6 +5,7 @@
   "display_name": "llama.cpp embeddings (local GGUF embedding pool)",
   "binary": "llama-server",
   "spec_version": 1,
+  "targets": ["adapter_plane"],
   "args": [
     "-m", "{model}",
     "--host", "127.0.0.1",

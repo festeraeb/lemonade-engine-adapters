@@ -2,29 +2,33 @@
   "recipe": "lemonade-burn-cuda",
   "stem": "burncuda",
   "class_prefix": "BurnCuda",
-  "display_name": "lemonade-burn CUDA (MoE prefill/decode split)",
+  "display_name": "lemonade-burn CUDA (MoE on one or more NVIDIA GPUs)",
   "binary": "lemonade-burn-server",
   "spec_version": 1,
+  "targets": ["adapter_plane"],
   "args": [
     "--model", "{model}",
     "--host", "127.0.0.1",
     "--port", "{port}",
     "--ctx", "{ctx}",
     "--gpu",
-    "--whole-layers"
+    "--whole-layers",
+    "--gpu-budget-mb", "14500",
+    "--gpu-dense-mb", "900"
   ],
   "env": {
     "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
     "CUDA_VISIBLE_DEVICES": "{gpu_uuids}",
-    "LB_CUDA_DEVICE": "0"
+    "LB_CUDA_DEVICE": "0",
+    "LB_QW_PREFILL_CHUNK": "256"
   },
   "library_dir": "binary",
   "default_device": "gpu",
   "support": [
     {
       "os": ["linux"],
-      "devices": {"nvidia_gpu": ["sm_60", "sm_61", "sm_75", "sm_80", "sm_86", "sm_89"]},
-      "note": "CUDA multi-GPU / single-GPU MoE split build of lemonade-burn-server; {gpu_uuids} aligns CUDA_VISIBLE_DEVICES with nvidia-smi."
+      "devices": {"nvidia_gpu": ["sm_60", "sm_75"]},
+      "note": "Run on Tesla P100 (sm_60), RTX 2060 and Tesla T10 (sm_75). Kernels are compiled at run time by NVRTC, so newer cards may work, but none has been tested."
     }
   ],
   "modes": ["chat"],
@@ -33,7 +37,11 @@
   "identity": {"owned_by": "lemonade-burn"},
   "completion": true,
   "notes": [
-    "Matches the live CUDA split lemonade-burn-server fleet runs on cesarops4 (:8130, :8132) and cesarops2 (:8122).",
-    "Uses {ctx} resolved by lemond and {gpu_uuids} from AdapterServer's R11 GPU inventory."
+    "Matches the CUDA lemonade-burn-server seats the CESARops fleet runs: Tiel-Coder and Qwen3.6 35B-A3B on cesarops4 (:8130, :8132) and LFM2.5-24B-A2B on cesarops2 (:8122).",
+    "Uses {ctx} resolved by lemond and {gpu_uuids} from AdapterServer's GPU inventory: adapter plane only (targets), no generated C++.",
+    "Packaging: lemonade-burn-server, NVRTC (libnvrtc.so.12*, libnvrtc-builtins.so.12*) and cuda-path/nvvm/libdevice/libdevice.10.bc sit in one folder (library_dir: binary puts only that folder on the loader path). The host needs only the NVIDIA driver. Without libdevice every kernel that calls exp fails to compile; lemonade-burn builds from a98831f (2026-11-17) find cuda-path/ beside the binary (or beside its bin/ folder) themselves, older builds need CUDA_PATH set to it.",
+    "GPU budget: --gpu-budget-mb 14500 and --gpu-dense-mb 900 are sized for one 16 GB card (P100, T10) and put LFM2.5-24B-A2B's experts on the GPU (88.8 tok/s decode on a P100, against 3.4 tok/s with the CPU default of 0). For a smaller card override the arguments with the model's adapter_args option or add LB_EXPERT_VRAM_MIB (MiB) to env. qwen35moe models ignore both flags and split every layer across the listed cards (Qwen3.6-35B-A3B on P100 + T10: 58-73 tok/s).",
+    "LB_QW_PREFILL_CHUNK=256 keeps qwen35moe models from running out of memory on the second long prompt when the weights nearly fill the cards; LFM2 models ignore it.",
+    "Not settable from a spec (outside the plane's environment allowlist): QWEN_SPLIT (layer split across cards; the engine splits automatically without it) and CUDARC_CUDA_VERSION."
   ]
 }
