@@ -1,0 +1,41 @@
+{
+  "recipe": "llamacpp-embed",
+  "stem": "llamacppembed",
+  "class_prefix": "LlamaCppEmbed",
+  "display_name": "llama.cpp embeddings (local GGUF embedding pool)",
+  "binary": "llama-server",
+  "spec_version": 1,
+  "args": [
+    "-m", "{model}",
+    "--host", "127.0.0.1",
+    "--port", "{port}",
+    "--embedding",
+    "--pooling", "mean",
+    "-c", "{ctx}",
+    "-b", "2048",
+    "-ub", "2048",
+    "-ngl", "0"
+  ],
+  "env": {
+    "CUDA_VISIBLE_DEVICES": "-1",
+    "GGML_VK_VISIBLE_DEVICES": "-1"
+  },
+  "default_device": "cpu",
+  "support": [
+    {
+      "os": ["linux"],
+      "devices": {"cpu": ["x86_64"]},
+      "note": "CPU embedding worker matching the cesarops4 (:5300-5304) and t440 (:5210) embeddinggemma-300m pool."
+    }
+  ],
+  "modes": ["embedding"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 300, "json_field": "status", "ready_values": ["ok"], "loading_values": ["loading model"]},
+  "identity": {"owned_by": "llamacpp"},
+  "telemetry_path": "/props",
+  "completion": false,
+  "notes": [
+    "Serves /v1/embeddings for GGUF embedding models (e.g. embeddinggemma-300m.Q8_0.gguf).",
+    "Exposes /props to lemond's /api/v1/stats engine_telemetry hook."
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "recipe": "lemonade-burn-cuda",
+  "stem": "burncuda",
+  "class_prefix": "BurnCuda",
+  "display_name": "lemonade-burn CUDA (MoE prefill/decode split)",
+  "binary": "lemonade-burn-server",
+  "spec_version": 1,
+  "args": [
+    "--model", "{model}",
+    "--host", "127.0.0.1",
+    "--port", "{port}",
+    "--ctx", "{ctx}",
+    "--gpu",
+    "--whole-layers"
+  ],
+  "env": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "CUDA_VISIBLE_DEVICES": "{gpu_uuids}",
+    "LB_CUDA_DEVICE": "0"
+  },
+  "library_dir": "binary",
+  "default_device": "gpu",
+  "support": [
+    {
+      "os": ["linux"],
+      "devices": {"nvidia_gpu": ["sm_60", "sm_61", "sm_75", "sm_80", "sm_86", "sm_89"]},
+      "note": "CUDA multi-GPU / single-GPU MoE split build of lemonade-burn-server; {gpu_uuids} aligns CUDA_VISIBLE_DEVICES with nvidia-smi."
+    }
+  ],
+  "modes": ["chat"],
+  "checkpoint": {"kind": "file"},
+  "ready": {"path": "/health", "timeout_s": 1800, "json_field": "status", "ready_values": ["ok"]},
+  "identity": {"owned_by": "lemonade-burn"},
+  "completion": true,
+  "notes": [
+    "Matches the live CUDA split lemonade-burn-server fleet runs on cesarops4 (:8130, :8132) and cesarops2 (:8122).",
+    "Uses {ctx} resolved by lemond and {gpu_uuids} from AdapterServer's R11 GPU inventory."
+  ]
+}
